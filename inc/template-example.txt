@@ -1,0 +1,18 @@
+#######################################################################################################
+# PROMPT [REF_NUM]
+# Extracted from: file://[FILEPATH]
+#######################################################################################################
+
+!FILENAME = [REF_NUM]-<model>-<hr-model>-<date>-<time>
+#!CKPT_FILE = [MODEL]
+#!SEED = [SEED]
+!WIDTH = [WIDTH]
+!HEIGHT = [HEIGHT]
+!SAMPLER = [SAMPLER]
+!STEPS = [STEPS]
+!SCALE = [SCALE]
+!CLIP_SKIP = [CLIP_SKIP]
+
+!NEG_PROMPT = [NEG_PROMPT]
+
+[PROMPT]

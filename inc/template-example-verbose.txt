@@ -1,0 +1,20 @@
+#######################################################################################################
+# PROMPT [REF_NUM]
+# Extracted from: file://[FILEPATH]
+# Raw metadata below:
+#[RAW_METADATA]
+#######################################################################################################
+
+!FILENAME = [REF_NUM]-<model>-<hr-model>-<date>-<time>
+#!CKPT_FILE = [MODEL]   # Base Model: [BASE_MODEL], Hash: [MODEL_HASH]
+#!SEED = [SEED]
+!WIDTH = [WIDTH]
+!HEIGHT = [HEIGHT]
+!SAMPLER = [SAMPLER]
+!STEPS = [STEPS]
+!SCALE = [SCALE]
+!CLIP_SKIP = [CLIP_SKIP]
+
+!NEG_PROMPT = [NEG_PROMPT]
+
+[PROMPT]

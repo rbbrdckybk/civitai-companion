@@ -1,0 +1,26 @@
+[config]
+
+!MODE = standard
+!REPEAT = yes
+
+# highres fix settings; adjust to your liking
+!HIGHRES_FIX = yes
+!HIGHRES_SCALE_FACTOR = 1.25
+!HIGHRES_UPSCALER = 4x-UltraSharp
+!STRENGTH = 0.55
+
+# image settings; individual prompts will override these if uncommented in your template file
+!WIDTH = 1024
+!HEIGHT = 1024
+!SAMPLER = DPM++ 2M
+!STEPS = 30
+!SAMPLES = 1
+!SCALE = 7
+!CLIP_SKIP = 1
+
+# replace this with the model (or list of models) that you want to use
+!CKPT_FILE = zavychromaxl_
+
+
+[prompts]
+

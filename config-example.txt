@@ -1,0 +1,95 @@
+##########################################################################################
+# Civitai Prompt Companion configuration file EXAMPLE
+# Read through and modify each section to suit your own needs.
+# Pay special attention to the first few sections to ensure that your API key is set and 
+# desired download location(s) are set properly.
+##########################################################################################
+
+# Put your own civitai.com API key here!
+# Read "How do I get an API token/key?" at Civitai's guide here: 
+# https://education.civitai.com/civitais-guide-to-downloading-via-api/
+# Without a valid API key, most download attempts will fail!
+civitai_api_key = 
+
+# Path to folder containing images downloaded from civitai.com
+# The example folder contains a few test images.
+image_path = img-examples
+
+# Ignore sub-directories of the image_path specified above? If no, will check for 
+# images in all sub-folders as well
+image_path_ignore_subdirs = no
+
+# Paths to your existing models, LoRAs, and embeddings. These will be checked before 
+# downloading any new assets from civitai.com to prevent downloading duplicates.
+# All sub-directories under paths specified here are automatically also checked.
+# For Auto1111 Windows users, your LoRA path is probably something like this:
+# C:\stable-diffusion-webui\models\Lora
+existing_model_path = assets\models
+existing_lora_path = assets\loras
+existing_embedding_path = assets\embeddings
+
+# Paths that you want new assets downloaded from civitai.com to be saved to.
+# Specifying a new sub-folder (e.g. "auto-download") under the corresponding path 
+# from the section above will probably work best for most people.
+# Leave a section blank to indicate that you do not want that type of resource 
+# to ever be downloaded (so in this example, models will not be downloaded)!
+download_model_path = 
+download_lora_path = assets\loras\auto-download
+download_embedding_path = assets\embeddings\auto-download
+
+# The output template that you want to use. This template controls how the various 
+# pieces of image metadata are presented when the output file is created. 
+# An example file compatible with Dream Factory is provided.
+prompt_output_template = inc\template-example.txt
+ 
+# The output header that you want to use. This header will be copied and prepended 
+# to the top of the output file (e.g.: before the actual prompts). 
+# An example file compatible with Dream Factory is provided.
+prompt_output_header = inc\header-example.txt
+
+# The output footer that you want to use. This footer will be copied and appended 
+# to the bottom of the output file (e.g.: after the actual prompts). 
+prompt_output_footer = 
+
+# The filename to save the output file as. The [date] and [time] tokens will be 
+# replaced with the actual date and time when the file is created.
+prompt_output_save_as = civitai_[date]_[time].prompts
+
+# Optional comma-separated list of base models (SDXL 1.0, SDXL Lightning, 
+# SDXL Turbo, SD 1.5, SD 2.1 768, Pony, etc) that you want included. Any images 
+# that contain metadata indicating that they were not created with a base model 
+# you specify here will be excluded. You can find a full list by performing an 
+# image search on civitai.com and looking at the "Filter by Base Model" control 
+# in the left navigation of the image results page.
+prompt_only_include_base = 
+
+# Set optional min/max steps for prompt metadata extracted from images
+prompt_min_steps = 
+prompt_max_steps = 
+
+# Set optional min/max cfg scale for prompt metadata extracted from images
+prompt_min_scale = 
+prompt_max_scale = 
+
+# Set resolution of processed images to the closet "official" resolution supported 
+# by whatever base model the image was created with (preserves aspect ratio)? 
+# Disabling will likely lead to out-of-memory errors when trying to execute 
+# .prompts files, as many images on civitai.com contain metadata width/height 
+# values that appear to be post-upscale.
+prompt_fix_resolution = yes
+
+# Optional comma-separated list of words to remove from positive prompts.
+prompt_word_filter_list = 
+
+# Optional comma-separated list of words to remove from negative prompts.
+prompt_neg_word_filter_list = 
+
+# Optional comma-separated list of LoRAs to remove from prompts. Only include the 
+# LoRA filename (without extension). 
+prompt_lora_filter_list = 
+
+# Maximum file size to download from civitai.com, in bytes (1500000000 = 1.5 GB)
+civitai_max_file_size = 1500000000
+
+# Minimum time (in seconds) between download requests to civitai.com
+civitai_request_delay = 0.5

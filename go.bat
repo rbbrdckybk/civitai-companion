@@ -1,0 +1,1 @@
+python civitai_reader.py --config_file config-example.txt
