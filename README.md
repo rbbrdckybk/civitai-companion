@@ -43,7 +43,7 @@ You can verify that everything works properly by running (or, you can simply typ
 python civitai_reader.py --config_file config-example.txt
 ```
 
-If everything is working, you should see Civitai Companion start, scan the 7 sample images in the **img-examples** directory, extract their metadata, and then automatically download several LoRAs that are referenced by them.
+If everything is working, you should see Civitai Companion start, scan the seven sample images in the **img-examples** directory, extract their metadata, automatically download several LoRAs that are referenced by them, and create a **civitai_[date]_[time].prompts** output file that is usable by [Dream Factory](https://github.com/rbbrdckybk/dream-factory) to create new images similar to the seven samples (check the **template-example.txt** file in the **inc** folder if you want to make changes to the output format for a different tool).
 
 You'll see errors that a few couldn't be downloaded because they require a civitai.com API key. You can [read Civitai's guide here](https://education.civitai.com/civitais-guide-to-downloading-via-api/) to get your own API key (skip to the "How do I get an API token/key?" section). After you have an API key, add it to your **config-example.txt** file and re-run Civitai Companion. You should see that the LoRAs that previously could not be downloaded complete successfully now.
 
