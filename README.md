@@ -38,7 +38,7 @@ pip install --no-input requests tqdm pillow
 
 # Usage
 
-You can verify that everything works properly by running (or, you can simply type **go** if you're running Windows):
+You can verify that everything works properly by running (or, you can simply type **start** if you're running Windows):
 ```
 python civitai_reader.py --config_file config-example.txt
 ```
