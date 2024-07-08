@@ -1,4 +1,4 @@
-# Copyright 2021 - 2024, Bill Kennedy (https://github.com/rbbrdckybk/dream-factory)
+# Copyright 2024, Bill Kennedy (https://github.com/rbbrdckybk/civitai-companion)
 # SPDX-License-Identifier: MIT
 
 import sys
