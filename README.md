@@ -19,7 +19,7 @@
 
 # Requirements
 
-You'll just need a working Python 3.10 environment. The setup instructions below assume that you're working within a suitable environment.
+You'll just need a working Python environment (tested on 3.10). The setup instructions below assume that you're working within a suitable environment.
 
 # Setup
 
