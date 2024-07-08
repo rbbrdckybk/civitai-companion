@@ -1,6 +1,8 @@
 # Civitai Companion
 
- Utility for extracting prompt metadata from Civitai AI images and auto-downloading resrouces used to generate them.
+ Utility for extracting prompt metadata from Civitai AI images, auto-downloading the resources used to generate them, and outputting/formatting the prompt information in the manner defined by user-created templates.
+ 
+ This was originally conceived as a companion tool for [Dream Factory](https://github.com/rbbrdckybk/dream-factory), so the included example template will work with Dream Factory out of the box. Templates can easily be created for use with Automatic1111 and other tools.
 
 # Features
 
