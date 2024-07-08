@@ -48,3 +48,9 @@ If everything is working, you should see Civitai Companion start, scan the seven
 You'll see errors that a few couldn't be downloaded because they require a civitai.com API key. You can [read Civitai's guide here](https://education.civitai.com/civitais-guide-to-downloading-via-api/) to get your own API key (skip to the "How do I get an API token/key?" section). After you have an API key, add it to your **config-example.txt** file and re-run Civitai Companion. You should see that the LoRAs that previously could not be downloaded complete successfully now.
 
 Read through the rest of the **config-example.txt** file and modify settings to suit your needs.
+
+# Advanced Usage Tips
+
+ * If you need to do any troubleshooting or encounter errors, there is a **log.txt** file in the **logs** folder that contains details of the last run in much greater verbosity than what is displayed on the console. 
+ * If you need to blacklist (e.g.: prevent from ever being downloaded again) a resource for whatever reason, add its civitai.com version ID to the **do_not_download.txt** file in the **cache** folder. If the resource has already been downloaded, its version ID should be in the **civitai_version_ids.txt** file. Simply search for the resource's name and copy the number at the start of the line (before the first comma) into the do_not_download.txt file.
+ 
