@@ -29,7 +29,7 @@ git clone https://github.com/rbbrdckybk/civitai-companion
 cd civitai-companion
 ```
 
-If you're already using [Dream Factory](https://github.com/rbbrdckybk/dream-factory), you should be good to go and can probably skip this step.
+If you're already using [Dream Factory](https://github.com/rbbrdckybk/dream-factory), you should be good to go and can probably skip the following step.
 
 **[2]** Install a few required packages:
 ```
