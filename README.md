@@ -9,13 +9,13 @@
  * Batch extracts prompts and all associated metadata (dimensions, model, sampler, steps, scale, etc) from images downloaded from civitai.com.
  * Automatically batch downloads necessary resources (models, LoRAs, embeddings) required to generate downloaded images. You may select the type(s) of resources that you want downloaded, a maximum file size for downloads, and blacklist resources that you never want downloaded.
  * Outputs all extracted prompt information and associated metadata into user-specified format driven by simple template system (includes sample template for [Dream Factory](https://github.com/rbbrdckybk/dream-factory)).
- * LoRA references embedded in prompts that have user-specified paths are automatically modified to match your path structure.
+ * LoRA references embedded in prompts that have user-specified paths are automatically modified to match your path structure (e.g.: <lora:some\user\specified\path\lora_name:1.0> becomes <lora:lora_name:1.0>).
  * LoRAs that are referenced in the 'resources' section of Civitai's prompt metadata but aren't embedded in the actual prompt are automatically added.
  * Optional specification of min/max values for certain prompt metadata values (e.g.: you may set max steps to 60, values over this will be set to 60).
  * Optional filtering for automatic removal of unwanted words from positive/negative prompts.
  * Optional filtering for automatic removal of unwanted LoRAs from prompts.
  * Optional image dimension re-sizing to the closest "official" resolution for the base model that each image is generated from (while preserving aspect ratio).
- * Samplers that are unsupported in Automatic1111's webui are automatically translated into an appropriate supported sampler.
+ * Sampler names that are unsupported in Automatic1111's webui are automatically translated into an appropriate supported sampler (e.g.: 'dpmpp_3m_sde' becomes 'DPM++ 3M SDE').
 
 # Requirements
 
