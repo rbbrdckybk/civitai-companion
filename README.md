@@ -8,14 +8,14 @@
 
  * Batch extracts prompts and all associated metadata (dimensions, model, sampler, steps, scale, etc) from images downloaded from civitai.com.
  * Automatically batch downloads necessary resources (models, LoRAs, embeddings) required to generate downloaded images. You may select the type(s) of resources that you want downloaded, a maximum file size for downloads, and blacklist resources that you never want downloaded.
- * Outputs all prompt information into user-specified format driven by simple template system (includes sample template for [Dream Factory](https://github.com/rbbrdckybk/dream-factory)).
- * LoRA references embedded in prompts that have user-specified paths are automatically modified to match your path structure.
+ * Outputs all extracted prompt information and associated metadata into user-specified format driven by simple template system (includes sample template for [Dream Factory](https://github.com/rbbrdckybk/dream-factory)).
+ * LoRA references embedded in prompts that have user-specified paths are automatically modified to match your path structure (e.g.: ```<lora:some\user\specified\path\lora_name:1.0>``` becomes ```<lora:lora_name:1.0>```).
  * LoRAs that are referenced in the 'resources' section of Civitai's prompt metadata but aren't embedded in the actual prompt are automatically added.
  * Optional specification of min/max values for certain prompt metadata values (e.g.: you may set max steps to 60, values over this will be set to 60).
  * Optional filtering for automatic removal of unwanted words from positive/negative prompts.
  * Optional filtering for automatic removal of unwanted LoRAs from prompts.
  * Optional image dimension re-sizing to the closest "official" resolution for the base model that each image is generated from (while preserving aspect ratio).
- * Samplers that are unsupported in Automatic1111's webui are automatically translated into an appropriate supported sampler.
+ * Sampler names that are unsupported in Automatic1111's webui are automatically translated into an appropriate supported sampler (e.g.: 'dpmpp_3m_sde' becomes 'DPM++ 3M SDE').
 
 # Requirements
 
@@ -51,6 +51,7 @@ Read through the rest of the **config-example.txt** file and modify settings to 
 
 # Advanced Usage Tips
 
+ * Configuration values may be specified in a config file and passed to Civitai Companion via the ```--config_file``` argument as demonstrated in the usage example **or** values may be passed via the command line. Values passed via command-line arguments override values set in a config file. This may be useful if you want to share a single config file between multiple workflows and simply override a few values on the command line for each.
  * If you need to do any troubleshooting or encounter errors, there is a **log.txt** file in the **logs** folder that contains details of the last run in much greater verbosity than what is displayed on the console. 
  * If you need to blacklist (e.g.: prevent from ever being downloaded again) a resource for whatever reason, add its civitai.com version ID to the **do_not_download.txt** file in the **cache** folder. If the resource has already been downloaded, its version ID should be in the **civitai_version_ids.txt** file. Simply search for the resource's name and copy the number at the start of the line (before the first comma) into the do_not_download.txt file.
  
