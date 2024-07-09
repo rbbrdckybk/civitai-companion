@@ -19,7 +19,7 @@
 
 # Requirements
 
-You'll just need a working Python 3.10 environment. The setup instructions below assume that you're working within a suitable environment.
+You'll just need a working Python environment (tested on 3.10). The setup instructions below assume that you're working within a suitable environment.
 
 # Setup
 
@@ -29,7 +29,7 @@ git clone https://github.com/rbbrdckybk/civitai-companion
 cd civitai-companion
 ```
 
-If you're already using [Dream Factory](https://github.com/rbbrdckybk/dream-factory), you should be good to go and can probably skip this step.
+If you're already using [Dream Factory](https://github.com/rbbrdckybk/dream-factory), you should be good to go and can probably skip the following step.
 
 **[2]** Install a few required packages:
 ```
@@ -45,7 +45,7 @@ python civitai_reader.py --config_file config-example.txt
 
 If everything is working, you should see Civitai Companion start, scan the seven sample images in the **img-examples** directory, extract their metadata, automatically download several LoRAs that are referenced by them, and create a **civitai_[date]_[time].prompts** output file that is usable by [Dream Factory](https://github.com/rbbrdckybk/dream-factory) to create new images similar to the seven samples (check the **template-example.txt** file in the **inc** folder if you want to make changes to the output format for a different tool).
 
-You'll see errors that a few couldn't be downloaded because they require a civitai.com API key. You can [read Civitai's guide here](https://education.civitai.com/civitais-guide-to-downloading-via-api/) to get your own API key (skip to the "How do I get an API token/key?" section). After you have an API key, add it to your **config-example.txt** file and re-run Civitai Companion. You should see that the LoRAs that previously could not be downloaded complete successfully now.
+You'll notice errors that a few LoRAs couldn't be downloaded because they require a civitai.com API key. You can [read Civitai's guide here](https://education.civitai.com/civitais-guide-to-downloading-via-api/) to get your own API key (skip to the "How do I get an API token/key?" section). After you have an API key, add it to your **config-example.txt** file and re-run Civitai Companion. You should see that the LoRAs that previously could not be downloaded complete successfully now.
 
 Read through the rest of the **config-example.txt** file and modify settings to suit your needs.
 
