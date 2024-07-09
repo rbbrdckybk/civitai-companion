@@ -109,7 +109,29 @@ class Prompts:
         self.remove_neg_filter_words()
         self.remove_empty(5)
         self.remove_dupes()
+        self.order_by_model()
         self.remove_filter_loras()
+
+
+    # re-orders the metadata so that models are grouped together
+    def order_by_model(self):
+        self.log('Ordering prompts by model...')
+        models = []
+        for k, v in self.metadata.items():
+            if v.model.lower().strip() not in models:
+                models.append(v.model.lower().strip())
+        models.sort()
+
+        # for each model,
+        ordered_metadata = {}
+        for m in models:
+            for k, v in self.metadata.items():
+                if v.model.lower().strip() == m:
+                    ordered_metadata[k] = v
+
+        #print('original count: ' + str(len(self.metadata.items())))
+        #print('sorted count: ' + str(len(ordered_metadata.items())))
+        self.metadata = ordered_metadata
 
 
     # returns a dict (version_id : filename) of referenced lora resources
@@ -386,6 +408,7 @@ class Prompts:
                 t = utils.ireplace('[height]', str(v.height), t)
                 t = utils.ireplace('[steps]', str(v.steps), t)
                 t = utils.ireplace('[scale]', str(v.scale), t)
+                t = utils.ireplace('[strength]', str(v.strength), t)
                 t = utils.ireplace('[neg_prompt]', v.neg_prompt, t)
                 t = utils.ireplace('[neg_prompt_raw]', v.neg_prompt_raw, t)
                 t = utils.ireplace('[prompt]', v.prompt, t)

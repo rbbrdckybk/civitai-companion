@@ -283,6 +283,7 @@ class Images:
             debug_str += 'Height: ' + str(v.height) + '\n'
             debug_str += 'Steps: ' + str(v.steps) + '\n'
             debug_str += 'Scale: ' + str(v.scale) + '\n'
+            debug_str += 'Strength: ' + str(v.strength) + '\n'
             if v.base_model != '':
                 debug_str += 'Model: ' + v.model + ' (base: ' + v.base_model + ')\n'
             else:
@@ -547,6 +548,7 @@ class Images:
                     md.neg_prompt = utils.sanitize_prompt(df_params.get('neg_prompt')).strip().strip('"')
                     md.steps = df_params.get('steps')
                     md.scale = df_params.get('scale')
+                    md.strength = df_params.get('strength')
                     md.width = df_params.get('width')
                     md.height = df_params.get('height')
                     md.sampler = df_params.get('sampler')
@@ -597,6 +599,11 @@ class Images:
                         v = p.split('CFG Scale:', 1)[1].strip()
                         v = v.split(',', 1)[0].strip()
                         md.scale = v
+
+                    if 'Denoising strength:' in p and ',' in p:
+                        v = p.split('Denoising strength:', 1)[1].strip()
+                        v = v.split(',', 1)[0].strip()
+                        md.strength = v
 
                     if 'Size:' in p and ',' in p:
                         v = p.split('Size:', 1)[1].strip()
@@ -769,7 +776,7 @@ class Images:
             # save orig raw versions of prompt/neg prompt
             md.prompt_raw = md.prompt
             md.neg_prompt_raw = md.neg_prompt
-            
+
             self.metadata.update({key:md})
 
 
@@ -788,6 +795,7 @@ class ImageMetaData:
     self.height = ''
     self.steps = ''
     self.scale = ''
+    self.strength = ''
     self.model = ''
     self.hash = ''
     self.base_model = ''
