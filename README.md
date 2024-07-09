@@ -6,7 +6,7 @@
 
 # Features
 
- * Batch extracts prompts and all associated metadata (dimensions, model, sampler, steps, scale, etc) from images downloaded from civitai.com.
+ * Batch extracts prompts and all associated metadata (dimensions, model, sampler, steps, scale, etc) from images downloaded from civitai.com. Also reads metadata from images created with [Dream Factory](https://github.com/rbbrdckybk/dream-factory).
  * Automatically batch downloads necessary resources (models, LoRAs, embeddings) required to generate downloaded images. You may select the type(s) of resources that you want downloaded, a maximum file size for downloads, and blacklist resources that you never want downloaded.
  * Outputs all extracted prompt information and associated metadata into user-specified format driven by simple template system (includes sample template for [Dream Factory](https://github.com/rbbrdckybk/dream-factory)).
  * LoRA references embedded in prompts that have user-specified paths are automatically modified to match your path structure (e.g.: ```<lora:some\user\specified\path\lora_name:1.0>``` becomes ```<lora:lora_name:1.0>```).
@@ -67,6 +67,7 @@ An example template file (**template-example.txt**) is located in the **inc** fo
  * ```[HEIGHT]``` The height of this image in pixels.
  * ```[SCALE]``` The cfg scale value used to produce this image.
  * ```[STEPS]``` The number of steps used to produce this image.
+ * ```[STRENGTH]``` The denoising strength used to produce this image (very few images include this).
  * ```[BASE_MODEL]``` The base model (e.g.: SDXL 1.0, SD 1.5, Pony, etc) that the [MODEL] is based on.
  * ```[MODEL_HASH]``` The hash of the [MODEL].
  * ```[FILENAME]``` The original filename that this metadata was extracted from.
