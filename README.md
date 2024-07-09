@@ -49,16 +49,34 @@ You'll notice errors that a few LoRAs couldn't be downloaded because they requir
 
 Read through the rest of the **config-example.txt** file and modify settings to suit your needs.
 
+# Template Reference
+
+The following tokens may be placed into template files; Civitai Companion will replace these tokens with the values extracted from image metadata.
+
+An example template file (**template-example.txt**) is located in the **inc** folder and will output prompt files compatible with [Dream Factory](https://github.com/rbbrdckybk/dream-factory).
+
+ * ```[PROMPT]``` The positive prompt used to produce this image.
+ * ```[PROMPT_RAW]``` The positive prompt before any filters are applied.
+ * ```[NEG_PROMPT]``` The negative prompt used to produce this image.
+ * ```[NEG_PROMPT_RAW]``` The negative prompt before any filters are applied.
+ * ```[MODEL]``` The model used to produce this image.
+ * ```[SEED]``` The seed value used to produce this image.
+ * ```[SAMPLER]``` The sampler used to produce this image.
+ * ```[CLIP_SKIP]``` The clip skip setting used to produce this image.
+ * ```[WIDTH]``` The width of this image in pixels.
+ * ```[HEIGHT]``` The height of this image in pixels.
+ * ```[SCALE]``` The cfg scale value used to produce this image.
+ * ```[STEPS]``` The number of steps used to produce this image.
+ * ```[BASE_MODEL]``` The base model (e.g.: SDXL 1.0, SD 1.5, Pony, etc) that the [MODEL] is based on.
+ * ```[MODEL_HASH]``` The hash of the [MODEL].
+ * ```[FILENAME]``` The original filename that this metadata was extracted from.
+ * ```[FILEPATH]``` The original full path and filename that this metadata was extracted from.
+ * ```[REF_NUM]``` A sequential reference number assigned to this image at processing time.
+ * ```[RAW_METADATA]``` The full raw (unprocessed) metadata extracted from this image.
+
 # Advanced Usage Tips
 
  * Configuration values may be specified in a config file and passed to Civitai Companion via the ```--config_file``` argument as demonstrated in the usage example **or** values may be passed via the command line. Values passed via command-line arguments override values set in a config file. This may be useful if you want to share a single config file between multiple workflows and simply override a few values on the command line for each.
  * If you need to do any troubleshooting or encounter errors, there is a **log.txt** file in the **logs** folder that contains details of the last run in much greater verbosity than what is displayed on the console. 
  * If you need to blacklist (e.g.: prevent from ever being downloaded again) a resource for whatever reason, add its civitai.com version ID to the **do_not_download.txt** file in the **cache** folder. If the resource has already been downloaded, its version ID should be in the **civitai_version_ids.txt** file. Simply search for the resource's name and copy the number at the start of the line (before the first comma) into the do_not_download.txt file.
  
-# Template Reference
-
-The following tokens may be placed into template files; Civitai Companion will replace these tokens with the values extracted from image metadata.
-
-An example template file (**template-example.txt**) is located in the **inc** folder and will produce output prompt files compatible with [Dream Factory](https://github.com/rbbrdckybk/dream-factory).
-
- * ```[PROMPT]``` The positive prompt used to produce an image.
