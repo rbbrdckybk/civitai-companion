@@ -58,6 +58,11 @@ class Network:
     # downloads a file from the given url
     # local_filename can be optionally specified, otherwise will attempt to discern it
     def download_file(self, url, local_filepath='', local_filename=''):
+        vid = url.rsplit('/', 1)[1]
+        # check do not download list
+        if vid in self.do_not_download:
+            self.log('This ID ('+ str(vid) + ') is in the \'do not download\' list; aborting download!')
+            return
         # check if the designated ouput file already exists
         if self.file_exists(local_filepath, local_filename):
             self.log('Error: ' + os.path.join(local_filepath, local_filename) + ' already exists; aborting download!')

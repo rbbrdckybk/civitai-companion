@@ -122,7 +122,7 @@ class Prompts:
                 models.append(v.model.lower().strip())
         models.sort()
 
-        # for each model,
+        # for each model, add matching metadata back into dict
         ordered_metadata = {}
         for m in models:
             for k, v in self.metadata.items():

@@ -21,6 +21,7 @@ class Config:
         self.network_config = {}
         self.image_config = {}
         self.prompt_config = {}
+        self.archive_config = {}
 
         self.parser = ap
         self.options = None
@@ -430,7 +431,6 @@ class Config:
                     elif command == 'download_embedding_path':
                         if value != '':
                             self.general_config.update({'download_embedding_path' : value})
-
 
 
     # handles logging to file/console

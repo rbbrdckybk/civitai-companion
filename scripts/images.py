@@ -46,11 +46,6 @@ class Images:
         # attempt to infer base models from other metadata
         self.infer_base_models()
 
-    # given a filename, returns a filesystem-safe version with illegal chars replaced
-    def sanitize_filename(self, filename):
-        safe_filename = re.sub(r"[/\\?%*:|\"<>\x7F\x00-\x1F]", "-", filename)
-        return safe_filename
-
 
     # returns a dict (version_id : filename) of referenced lora resources
     # types is a list of the types of resources to return (e.g. lora, embed, model)
@@ -168,7 +163,7 @@ class Images:
                             if file['downloadUrl'].endswith(str(id)):
                                 if 'name' in file:
                                     filename = file['name']
-                                    filename = self.sanitize_filename(filename)
+                                    filename = utils.sanitize_filename(filename)
                                     # get additional details if present:
                                     name = ''
                                     if 'model' in data and 'name' in data['model']:
@@ -217,6 +212,7 @@ class Images:
 
     # writes a new civitai.com version ID/filename pair to the cache
     def write_cache_id(self, id, filename, resource_name, base_model):
+        resource_name = resource_name.replace(',', ';')
         if id not in self.cache_id:
             self.cache_id[id] = filename + ',' + resource_name + ',' + base_model
             with open(self.cache_id_file, 'a', encoding="utf-8") as f:
@@ -288,6 +284,7 @@ class Images:
                 debug_str += 'Model: ' + v.model + ' (base: ' + v.base_model + ')\n'
             else:
                 debug_str += 'Model: ' + v.model + ' (unknown base model)\n'
+            debug_str += 'Model Hash: ' + str(v.hash) + '\n'
             debug_str += 'Sampler: ' + v.sampler + '\n'
             debug_str += 'Clip Skip: ' + str(v.clip_skip) + '\n'
             debug_str += 'Resources: ' + self.debug_list_resources(v.resources)
@@ -672,8 +669,12 @@ class Images:
                     resources = p.split('Civitai resources:', 1)[1].strip()
                     while '{"type":"checkpoint",' in resources and '}' in resources:
                         work = resources.split('{"type":"checkpoint",', 1)[1].split('}', 1)[0]
+                        id = ''
                         if '"modelVersionId":' in work and ',' in work:
                             id = work.split('"modelVersionId":', 1)[1].split(',', 1)[0]
+                        elif '"modelVersionId":' in work:
+                            id = work.split('"modelVersionId":', 1)[1].strip()
+                        if id != '':
                             rsc = ImageResources()
                             rsc.type = 'checkpoint'
                             rsc.version_id = id

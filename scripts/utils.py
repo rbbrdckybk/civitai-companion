@@ -32,6 +32,12 @@ class TextFile():
         return len(self.lines)
 
 
+# given a filename, returns a filesystem-safe version with illegal chars replaced
+def sanitize_filename(filename):
+    safe_filename = re.sub(r"[/\\?%*:|\"<>\x7F\x00-\x1F]", "-", filename)
+    return safe_filename
+
+
 # fixes common formatting issues in user prompts
 def sanitize_prompt(p):
     # remove newlines

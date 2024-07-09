@@ -10,6 +10,7 @@ from pathlib import Path
 from scripts.images import Images
 from scripts.network import Network
 from scripts.prompts import Prompts
+from scripts.archive import Archive
 from scripts.config import Config
 
 # gets resources found within specified dir and all sub-dirs
@@ -78,6 +79,10 @@ if __name__ == '__main__':
 
     network = Network(config.network_config)
     images = Images(config.image_config)
+    
+    # TODO
+    #archive = Archive(images.metadata, config.archive_config)
+    #archive.handle_archiving()
 
     #images.debug_list_metadata()
     #images.debug_list_metadata_resource_types()
