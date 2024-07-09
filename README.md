@@ -55,3 +55,10 @@ Read through the rest of the **config-example.txt** file and modify settings to 
  * If you need to do any troubleshooting or encounter errors, there is a **log.txt** file in the **logs** folder that contains details of the last run in much greater verbosity than what is displayed on the console. 
  * If you need to blacklist (e.g.: prevent from ever being downloaded again) a resource for whatever reason, add its civitai.com version ID to the **do_not_download.txt** file in the **cache** folder. If the resource has already been downloaded, its version ID should be in the **civitai_version_ids.txt** file. Simply search for the resource's name and copy the number at the start of the line (before the first comma) into the do_not_download.txt file.
  
+# Template Reference
+
+The following tokens may be placed into template files; Civitai Companion will replace these tokens with the values extracted from image metadata.
+
+An example template file (**template-example.txt**) is located in the **inc** folder and will produce output prompt files compatible with [Dream Factory](https://github.com/rbbrdckybk/dream-factory).
+
+ * ```[PROMPT]``` The positive prompt used to produce an image.
