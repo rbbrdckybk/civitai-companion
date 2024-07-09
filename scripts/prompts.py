@@ -341,6 +341,9 @@ class Prompts:
     # writes an output .prompts file containing prompts discerned from image data
     # in the format specified by the user-supplied template file
     def write_prompt_file(self):
+        if len(self.metadata) == 0:
+            self.log('No usable metadata to output; aborting prompt file write!')
+            return
         filename = 'output.prompts'
         if self.output_save_as != '':
             # create output directory if necessary
