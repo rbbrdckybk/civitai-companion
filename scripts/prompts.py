@@ -384,7 +384,9 @@ class Prompts:
                 t = utils.ireplace('[steps]', str(v.steps), t)
                 t = utils.ireplace('[scale]', str(v.scale), t)
                 t = utils.ireplace('[neg_prompt]', v.neg_prompt, t)
+                t = utils.ireplace('[neg_prompt_raw]', v.neg_prompt_raw, t)
                 t = utils.ireplace('[prompt]', v.prompt, t)
+                t = utils.ireplace('[prompt_raw]', v.prompt_raw, t)
                 t = utils.ireplace('[base_model]', v.base_model, t)
                 t = utils.ireplace('[model_hash]', v.hash, t)
                 # write templated prompt to output file

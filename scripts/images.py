@@ -766,6 +766,10 @@ class Images:
                         rsc.hash = hash
                         md.resources.append(rsc)
 
+            # save orig raw versions of prompt/neg prompt
+            md.prompt_raw = md.prompt
+            md.neg_prompt_raw = md.neg_prompt
+            
             self.metadata.update({key:md})
 
 
@@ -776,7 +780,9 @@ class ImageMetaData:
     self.orig_filepath = ''
     self.raw_metadata = ''
     self.prompt = ''
+    self.prompt_raw = ''
     self.neg_prompt = ''
+    self.neg_prompt_raw = ''
     self.seed = ''
     self.width = ''
     self.height = ''

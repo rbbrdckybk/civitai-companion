@@ -8,13 +8,17 @@
 !FILENAME = [REF_NUM]-<model>-<hr-model>-<date>-<time>
 #!CKPT_FILE = [MODEL]   # Base Model: [BASE_MODEL], Hash: [MODEL_HASH]
 #!SEED = [SEED]
-!WIDTH = [WIDTH]
-!HEIGHT = [HEIGHT]
-!SAMPLER = [SAMPLER]
+#!SAMPLER = [SAMPLER]
+#!CLIP_SKIP = [CLIP_SKIP]
+#!WIDTH = [WIDTH]
+#!HEIGHT = [HEIGHT]
 !STEPS = [STEPS]
 !SCALE = [SCALE]
-!CLIP_SKIP = [CLIP_SKIP]
+
+# raw negative (pre-filtered): [NEG_PROMPT_RAW]
 
 !NEG_PROMPT = [NEG_PROMPT]
+
+# raw positive (pre-filtered): [PROMPT_RAW]
 
 [PROMPT]
