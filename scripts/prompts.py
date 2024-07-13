@@ -636,6 +636,12 @@ class Prompts:
             return 'Euler a'
         elif sampler == 'dpmpp_3m_sde_gpu_sgm_uniform':
             return 'DPM++ 3M SDE'
+        elif sampler == 'dpmpp_2m_sde_gpu_karras':
+            return 'DPM++ 2M SDE'
+        elif sampler == 'euler a sgmuniform':
+            return 'Euler a'
+        elif sampler == 'euler sgmuniform':
+            return 'Euler'
         #elif sampler == 'sa solver':
         #    return ''
         else:

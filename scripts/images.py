@@ -43,8 +43,28 @@ class Images:
         # do necessary lookups from cache and/or on civitai.com
         self.lookup_missing_metadata()
 
+        # check that the type of resource specified in metadata matches what
+        # the civitai.com API returns; use API if mismatched
+        self.verify_resource_types()
+
         # attempt to infer base models from other metadata
         self.infer_base_models()
+
+
+    # check each metadata resource type against API values
+    # if mismatched, use API types
+    # resource types listed in image metadata are sometimes incorrect
+    def verify_resource_types(self):
+        self.log('Verifying image metadata resource types match API values...')
+        for k, v in self.metadata.items():
+            for r in v.resources:
+                api_type = self.lookup_civitai_resource_type(r.version_id)
+                if api_type != '':
+                    if r.type.lower().strip() == 'checkpoint':
+                        r.type = 'model'
+                    if r.type != api_type:
+                        self.log('Warning: resource type (' + r.type + ') does not match API type (' + api_type + ') for resource ' + r.resource_name + '; using API type...', self.log_to_console)
+                        r.type = api_type
 
 
     # returns a dict (version_id : filename) of referenced lora resources
@@ -168,18 +188,21 @@ class Images:
                                     name = ''
                                     if 'model' in data and 'name' in data['model']:
                                         name = data['model']['name']
+                                    type = ''
+                                    if 'model' in data and 'type' in data['model']:
+                                        type = data['model']['type']
                                     base_model = ''
                                     if 'baseModel' in data:
                                         base_model = data['baseModel']
                                     # add to cache
-                                    self.write_cache_id(id, filename, name, base_model)
+                                    self.write_cache_id(id, filename, name, base_model, type)
                                     break
                 else:
                     if 'error' in data:
                         error = data['error']
                         if error == 'Model not found':
                             self.log('Model version ID ' + str(id) + ' does not exist on civitai.com!', self.log_to_console)
-                            self.write_cache_id(id, '', '', '')
+                            self.write_cache_id(id, '', '', '', '')
             except:
                 self.log('Error attempting to lookup model id ' + str(id) + ' on civitai.com!', self.log_to_console)
 
@@ -198,6 +221,7 @@ class Images:
                     name = data[1]
         return name
 
+
     # given a civitai version ID, looks up the base model
     # this only checks the cache (call this after filename lookups)
     def lookup_civitai_base_model(self, id):
@@ -210,13 +234,40 @@ class Images:
                     base = data[2]
         return base
 
+
+    # given a civitai version ID, looks up the resource type
+    # this only checks the cache (call this after filename lookups)
+    def lookup_civitai_resource_type(self, id):
+        type = ''
+        if id in self.cache_id:
+            temp = self.cache_id.get(id)
+            if ',' in temp:
+                data = temp.split(',')
+                if len(data) >= 4:
+                    type = data[3]
+                    # translate type to match resource names in image metadata
+                    # Semi-complete list? :
+                    # LoCon, LORA, TextualInversion, Checkpoint, DoRA, VAE
+                    if type.lower().strip() in ('lora', 'locon', 'dora'):
+                        type = 'lora'
+                    elif type.lower().strip() in ('textualinversion'):
+                        type = 'embed'
+                    elif type.lower().strip() in ('checkpoint', 'model'):
+                        type = 'model'
+                    elif type.lower().strip() in ('vae'):
+                        type = 'vae'
+        return type
+
+
     # writes a new civitai.com version ID/filename pair to the cache
-    def write_cache_id(self, id, filename, resource_name, base_model):
+    def write_cache_id(self, id, filename, resource_name, base_model, type):
         resource_name = resource_name.replace(',', ';')
+        base_model = base_model.replace(',', ';')
+        type = type.replace(',', ';')
         if id not in self.cache_id:
-            self.cache_id[id] = filename + ',' + resource_name + ',' + base_model
+            self.cache_id[id] = filename + ',' + resource_name + ',' + base_model + ',' + type
             with open(self.cache_id_file, 'a', encoding="utf-8") as f:
-                f.write(str(id) + ',' + filename + ',' + resource_name + ',' + base_model + '\n')
+                f.write(str(id) + ',' + filename + ',' + resource_name + ',' + base_model + ',' + type + '\n')
 
     # writes a new civitai.com hash/version ID pair to the cache
     def write_cache_hash(self, hash, id):
@@ -311,7 +362,9 @@ class Images:
             resources = str(count) + ' total resources used:\n' + resources
         return resources
 
+
     # for debugging; lists the different types of resources found in metadata
+    # types here are what the image metadata claims it is
     def debug_list_metadata_resource_types(self):
         output = "These types of resources were found in image metadata:\n"
         types = set()
@@ -321,6 +374,21 @@ class Images:
         for t in types:
             output += ' ' + t + '\n'
         self.log(output)
+
+
+    # for debugging; lists the different types of resources found in metadata
+    # types here are after looking up the version IDs of resources via API
+    def debug_list_metadata_resource_types_via_api(self):
+        output = "These types of resources were found in image metadata (API verified):\n"
+        types = set()
+        for k, v in self.metadata.items():
+            for r in v.resources:
+                api_type = self.lookup_civitai_resource_type(r.version_id)
+                types.add(api_type)
+        for t in types:
+            output += ' ' + t + '\n'
+        self.log(output)
+
 
     # for debugging; lists the different base models used in the images
     def debug_list_base_model_breakdown(self):
@@ -431,7 +499,7 @@ class Images:
                 if len(bases) > 0:
                     if len(bases) > 1:
                         # multiple models in resource list
-                        # TODO? this case does not seem to occur
+                        # this case does not seem to occur
                         pass
                     else:
                         # only one model found in the resources, assume it's the base

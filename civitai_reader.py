@@ -79,13 +79,14 @@ if __name__ == '__main__':
 
     network = Network(config.network_config)
     images = Images(config.image_config)
-    
+
     # TODO
     #archive = Archive(images.metadata, config.archive_config)
     #archive.handle_archiving()
 
     #images.debug_list_metadata()
     #images.debug_list_metadata_resource_types()
+    #images.debug_list_metadata_resource_types_via_api()
     images.debug_list_base_model_breakdown()
     images.debug_list_model_breakdown(True)
     #images.debug_list_sampler_breakdown()
