@@ -45,7 +45,11 @@ def sanitize_prompt(p):
     p = ''.join(split_text)
     # remove explicit embedding declarations
     p = p.replace('embedding:', '')
+    # ensure spaces around BREAK declarations; extras will be removed below
+    p = p.replace('BREAK', ' BREAK ')
     # remove common readability/formatting issues
+    while '(, ),' in p:
+        p = p.replace('(, ),', '')
     while '  ' in p:
         p = p.replace('  ', ' ')
     while ',,' in p:
@@ -83,15 +87,15 @@ def sanitize_prompt(p):
 
 # case-insensitive word replace
 # will only replace if a case-insensitive match on the word is found AND
-# the word is preceeded by a space, comma, or the start of the string
-# AND the word is followed by a space, comma, period, or the end of the string
+# the word is preceeded by a space, comma, open paran, or the start of the string
+# AND the word is followed by a space, comma, period, close paran, or the end of the string
 def word_replace(word, text):
     if word.lower().strip() == text.lower().strip():
         return ''
 
     final = text
     # this should be all that's required; not sure why the ^ $ aren't matching start/end of string...
-    final = re.sub("(?<=[, ^])" + re.escape(word) + "(?=[\., $])", "", text, flags=re.IGNORECASE)
+    final = re.sub("(?<=[,\( ^])" + re.escape(word) + "(?=[\.,\) $])", "", text, flags=re.IGNORECASE)
 
     if final.lower().strip().startswith(word.lower().strip()):
         final = final[len(word):]

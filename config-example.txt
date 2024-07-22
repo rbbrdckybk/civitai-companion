@@ -85,7 +85,7 @@ prompt_word_filter_list =
 prompt_neg_word_filter_list = 
 
 # Optional comma-separated list of LoRAs to remove from prompts. Only include the 
-# LoRA filename (without extension). 
+# LoRA filename (without extension). Use "all" to remove ALL loras.
 prompt_lora_filter_list = 
 
 # Maximum file size to download from civitai.com, in bytes (1500000000 = 1.5 GB)
