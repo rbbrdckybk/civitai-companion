@@ -50,6 +50,8 @@ def sanitize_prompt(p):
     # remove common readability/formatting issues
     while '(, ),' in p:
         p = p.replace('(, ),', '')
+    while '()' in p:
+        p = p.replace('()', '')
     while '  ' in p:
         p = p.replace('  ', ' ')
     while ',,' in p:
