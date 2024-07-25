@@ -61,6 +61,7 @@ prompt_output_save_as = civitai_[date]_[time].prompts
 # you specify here will be excluded. You can find a full list by performing an 
 # image search on civitai.com and looking at the "Filter by Base Model" control 
 # in the left navigation of the image results page.
+# You can use special keyword "unknown" to include images with unknown base models.
 prompt_only_include_base = 
 
 # Set optional min/max steps for prompt metadata extracted from images

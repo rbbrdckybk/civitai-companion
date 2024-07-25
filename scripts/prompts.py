@@ -217,7 +217,7 @@ class Prompts:
                     work = temp.split('<lora:', 1)[1].split('>', 1)[0]
                     work = work.split(':', 1)[0]
                     for fl in self.lora_filter_list:
-                        if fl == work.lower().strip():
+                        if fl == work.lower().strip() or fl.lower().strip() == 'all':
                             # remove this lora
                             temp = before + after
                             count += 1
@@ -225,6 +225,7 @@ class Prompts:
                             # this lora is fine; keep it
                             temp = before + '<zzzora:' + work + '>' + after
                 v.prompt = temp.replace('<zzzora:', '<lora:')
+                v.prompt = utils.sanitize_prompt(v.prompt)
             self.log('Removed ' + str(count) + ' occurances of unwanted LoRA(s) in prompts...')
 
 
@@ -349,7 +350,10 @@ class Prompts:
             original_length = len(self.metadata)
             for kc, vc in self.metadata.copy().items():
                 for k, v in self.metadata.items():
-                    if v.base_model.lower().strip() not in self.base_list:
+                    this_base = v.base_model.lower().strip()
+                    if this_base == '':
+                        this_base = 'unknown'
+                    if this_base not in self.base_list:
                         # this is unwanted, save the key
                         unwanted_keys.append(k)
             for key in unwanted_keys:
