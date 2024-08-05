@@ -8,6 +8,7 @@ import os
 import shlex
 import glob
 import requests
+import json
 from tqdm.auto import tqdm
 from os.path import exists
 from pathlib import Path
@@ -539,6 +540,7 @@ class Images:
             return ''
         image = Image.open(image_path)
         exif_data = image._getexif()
+
         if exif_data is not None:
             for tag_id in exif_data:
                 tag = TAGS.get(tag_id, tag_id)
@@ -549,6 +551,15 @@ class Images:
                     if data.startswith('UNICODE'):
                         data = data.replace('UNICODE', '', 1)
                     return data.replace('\x00', '')
+        else:
+            # try to extract comfy workflow
+            prompt = ''
+            try:
+                metadata = image.text
+                prompt = metadata["prompt"]
+            except:
+                prompt = ''
+            return prompt
         return ''
 
     # collect all image files in the specified target location
@@ -594,7 +605,6 @@ class Images:
         with open(self.logfile, 'a', encoding="utf-8") as f:
             f.write(output + '\n')
 
-
     # extracts SD parameters from the full command
     def decode_metadata(self):
         for key, val in self.metadata.copy().items():
@@ -603,181 +613,260 @@ class Images:
             command = md.raw_metadata
             if command != "":
                 dream_factory = False
+                is_json = True
+                try:
+                    json.loads(command)
+                except:
+                    is_json = False
                 p = ''
-                command = command.strip('"')
-                if '--neg_prompt' in command:
-                    # this was created by Dream Factory
-                    dream_factory = True
-                    df_params = utils.extract_params_from_command(command)
-                    md.prompt = utils.sanitize_prompt(df_params.get('prompt')).strip().strip('"')
-                    md.neg_prompt = utils.sanitize_prompt(df_params.get('neg_prompt')).strip().strip('"')
-                    md.steps = df_params.get('steps')
-                    md.scale = df_params.get('scale')
-                    md.strength = df_params.get('strength')
-                    md.width = df_params.get('width')
-                    md.height = df_params.get('height')
-                    md.sampler = df_params.get('sampler')
-                    md.seed = df_params.get('seed')
-                    md.clip_skip = df_params.get('clip_skip')
-                    md.model = utils.extract_model_filename(df_params.get('model'))
-                    md.hash = utils.extract_model_hash(df_params.get('model'))
 
-                elif 'Negative prompt:' in command:
-                    # we'll assume anything before this is the prompt
-                    temp = command.split('Negative prompt:', 1)[0]
-                    temp = temp.strip()
-                    temp = temp.replace('\\', '')
-                    md.prompt = utils.sanitize_prompt(temp)
-
-                    # get negative
-                    temp = command.split('Negative prompt:', 1)[1].strip()
-                    if temp.startswith('Steps:'):
-                        temp = ''
-                    elif '\nSteps:' in temp:
-                        temp = temp.split('\nSteps:', 1)[0]
-                    elif '\n' in temp:
-                        temp = temp.split('\n', 1)[0]
-
-                    md.neg_prompt = utils.sanitize_prompt(temp).strip().strip('"')
-                    p = command.split('Negative prompt:', 1)[1].strip()
-                else:
-                    if '\n' in command:
-                        temp = command.rsplit('\n', 1)[0].strip()
-                        md.prompt = utils.sanitize_prompt(temp)
-                        p = command.rsplit('\n', 1)[1]
-                    else:
-                        p = command
-
-                # get the rest of the params:
-                if not dream_factory:
-                    if 'Steps:' in p and ',' in p:
-                        v = p.split('Steps:', 1)[1].strip()
-                        v = v.split(',', 1)[0].strip()
-                        md.steps = v
-
-                    # TODO case-insensitive match/replace here
-                    if 'CFG scale:' in p and ',' in p:
-                        v = p.split('CFG scale:', 1)[1].strip()
-                        v = v.split(',', 1)[0].strip()
-                        md.scale = v
-                    elif 'CFG Scale:' in p and ',' in p:
-                        v = p.split('CFG Scale:', 1)[1].strip()
-                        v = v.split(',', 1)[0].strip()
-                        md.scale = v
-
-                    if 'Denoising strength:' in p and ',' in p:
-                        v = p.split('Denoising strength:', 1)[1].strip()
-                        v = v.split(',', 1)[0].strip()
-                        md.strength = v
-
-                    if 'Size:' in p and ',' in p:
-                        v = p.split('Size:', 1)[1].strip()
-                        v = v.split(',', 1)[0].strip()
-                        if 'x' in v:
-                            width = v.split('x', 1)[0].strip()
-                            height = v.split('x', 1)[1].strip()
-                            md.width = width
-                            md.height = height
-
-                    if 'Clip skip:' in p and ',' in p:
-                        v = p.split('Clip skip:', 1)[1].strip()
-                        v = v.split(',', 1)[0].strip()
-                        md.clip_skip = v
-
-                    if 'Sampler:' in p and ',' in p:
-                        v = p.split('Sampler:', 1)[1].strip()
-                        v = v.split(',', 1)[0].strip()
-                        if v.endswith(' Exponential'):
-                            v = v.replace(' Exponential', '')
-                        if v.endswith(' Karras'):
-                            v = v.replace(' Karras', '')
-                        md.sampler = v
-
-                    if 'Seed:' in p and ',' in p:
-                        v = p.split('Seed:', 1)[1].strip()
-                        v = v.split(',', 1)[0].strip()
-                        md.seed = v
-
-                    if 'Model:' in p and ',' in p:
-                        v = p.split('Model:', 1)[1].strip()
-                        v = v.split(',', 1)[0].strip()
-                        md.model = v
-
-                    if 'Model hash:' in p and ',' in p:
-                        v = p.split('Model hash:', 1)[1].strip()
-                        v = v.split(',', 1)[0].strip()
-                        md.hash = v
-
-                # get resources used:
-                if 'Civitai resources:' in p:
-                    # option 1
-                    # get loras
-                    resources = p.split('Civitai resources:', 1)[1].strip()
-                    while '{"type":"lora",' in resources and '}' in resources:
-                        work = resources.split('{"type":"lora",', 1)[1].split('}', 1)[0]
-                        if '"modelVersionId":' in work and ',' in work:
-                            id = work.split('"modelVersionId":', 1)[1].split(',', 1)[0]
-                            weight = 1.0
-                            if '"weight":' in work and ',' in work:
-                                w = work.split('"weight":', 1)[1].split(',', 1)[0]
-                                try:
-                                    weight = float(w)
-                                except:
-                                    weight = 1.0
-                            rsc = ImageResources()
-                            rsc.type = 'lora'
-                            rsc.version_id = id
-                            rsc.weight = weight
-                            md.resources.append(rsc)
-                        before = resources.split('{"type":"lora",', 1)[0]
-                        after = resources.split('{"type":"lora",', 1)[1].split('}', 1)[1]
-                        resources = (before + after).strip()
-
-                    # get checkpoints
-                    resources = p.split('Civitai resources:', 1)[1].strip()
-                    while '{"type":"checkpoint",' in resources and '}' in resources:
-                        work = resources.split('{"type":"checkpoint",', 1)[1].split('}', 1)[0]
-                        id = ''
-                        if '"modelVersionId":' in work and ',' in work:
-                            id = work.split('"modelVersionId":', 1)[1].split(',', 1)[0]
-                        elif '"modelVersionId":' in work:
-                            id = work.split('"modelVersionId":', 1)[1].strip()
-                        if id != '':
-                            rsc = ImageResources()
-                            rsc.type = 'checkpoint'
-                            rsc.version_id = id
-                            md.resources.append(rsc)
-                        before = resources.split('{"type":"checkpoint",', 1)[0]
-                        after = resources.split('{"type":"checkpoint",', 1)[1].split('}', 1)[1]
-                        resources = (before + after).strip()
-
-                    # get embeddings
-                    resources = p.split('Civitai resources:', 1)[1].strip()
-                    while '{"type":"embed",' in resources and '}' in resources:
-                        work = resources.split('{"type":"embed",', 1)[1].split('}', 1)[0]
-                        if '"modelVersionId":' in work and ',' in work:
-                            id = work.split('"modelVersionId":', 1)[1].split(',', 1)[0]
-                            rsc = ImageResources()
-                            rsc.type = 'embed'
-                            rsc.version_id = id
-                            md.resources.append(rsc)
-                        before = resources.split('{"type":"embed",', 1)[0]
-                        after = resources.split('{"type":"embed",', 1)[1].split('}', 1)[1]
-                        resources = (before + after).strip()
-
-                    # extra pass to get loras in different format
-                    resources = p.split('Civitai resources:', 1)[1].strip()
-                    while 'Type = lora }"' in resources and '}' in resources:
-                        work = resources.split('Type = lora }"', 1)[1].split('}', 1)[0]
-                        if '"modelVersionId":' in work:
-                            id = work.split('"modelVersionId":', 1)[1]
-                            found = True
+                if is_json:
+                    errors = 0
+                    workflow = json.loads(command)
+                    software = ''
+                    is_comfy = True
+                    if 'Fooocus v' in command:
+                        software = 'Fooocus'
+                        is_comfy = False
+                        try:
+                            md.prompt = utils.sanitize_prompt(workflow['prompt'])
+                            md.neg_prompt = utils.sanitize_prompt(workflow['negative_prompt'])
+                            md.steps = workflow['steps']
+                            md.scale = workflow['guidance_scale']
+                            res = workflow['resolution'].strip('(').strip(')')
+                            md.width = res.split(',', 1)[0].strip()
+                            md.height = res.split(',', 1)[1].strip()
+                            md.sampler = workflow['sampler']
+                            md.scheduler = workflow['scheduler']
+                            md.seed = workflow['seed']
+                            md.model = utils.extract_model_filename(workflow['base_model'])
+                            md.hash = workflow['base_model_hash']
+                        except:
+                            errors += 1
+                        else:
+                            # if above succeeded, try to get loras as well
                             try:
-                                num_id = int(id)
+                                loras = workflow['loras']
+                                for lora in loras:
+                                    rsc = ImageResources()
+                                    rsc.type = 'lora'
+                                    rsc.hash = lora[2]
+                                    rsc.weight = lora[1]
+                                    md.resources.append(rsc)
                             except:
-                                self.log('Unable to determine lora ID from metadata in ' + md.orig_filename, self.log_to_console)
-                                found = False
-                            if found:
+                                pass
+
+                    elif 'RuinedFooocus' in command:
+                        # RuinedFooocus does not include LoRA hashes or civitai IDs so
+                        # cannot look them up
+                        software = 'RuinedFooocus'
+                        is_comfy = False
+                        try:
+                            md.prompt = utils.sanitize_prompt(workflow['Prompt'])
+                            md.neg_prompt = utils.sanitize_prompt(workflow['Negative'])
+                            md.steps = workflow['steps']
+                            md.scale = workflow['cfg']
+                            md.width = workflow['width']
+                            md.height = workflow['height']
+                            md.sampler = workflow['sampler_name']
+                            md.scheduler = workflow['scheduler']
+                            md.seed = workflow['seed']
+                            md.model = utils.extract_model_filename(workflow['base_model_name'])
+                            md.hash = workflow['base_model_hash']
+                        except:
+                            errors += 1
+
+                    if is_comfy:
+                        # created by ComfyUI
+                        # will not be 100% accurate for complex workflows with multiple prompts
+                        software = 'ComfyUI'
+                        for node in workflow:
+                            data = workflow[node]
+                            try:
+                                if 'inputs' in data and 'text_positive' in data['inputs']:
+                                    if isinstance(data['inputs']['text_positive'], str):
+                                        md.prompt = utils.sanitize_prompt(data['inputs']['text_positive'].strip())
+                                if 'inputs' in data and 'text_negative' in data['inputs']:
+                                    if isinstance(data['inputs']['text_negative'], str):
+                                        md.neg_prompt = utils.sanitize_prompt(data['inputs']['text_negative'].strip())
+                                if 'inputs' in data and 'noise_seed' in data['inputs']:
+                                    try:
+                                        int(data['inputs']['noise_seed'])
+                                    except:
+                                        pass
+                                    else:
+                                        md.seed = data['inputs']['noise_seed']
+                                if 'inputs' in data and 'sampler_name' in data['inputs']:
+                                    if isinstance(data['inputs']['sampler_name'], str):
+                                        md.sampler = data['inputs']['sampler_name']
+                                if 'inputs' in data and 'scheduler' in data['inputs']:
+                                    if isinstance(data['inputs']['scheduler'], str):
+                                        md.scheduler = data['inputs']['scheduler']
+                                    if 'steps' in data['inputs']:
+                                        md.steps = data['inputs']['steps']
+                                if 'inputs' in data and 'guidance' in data['inputs']:
+                                    md.scale = data['inputs']['guidance']
+                                if 'inputs' in data and 'unet_name' in data['inputs']:
+                                    if isinstance(data['inputs']['unet_name'], str):
+                                        md.model = utils.extract_model_filename(data['inputs']['unet_name'])
+                                if 'inputs' in data and 'width' in data['inputs']:
+                                    try:
+                                        int(data['inputs']['width'])
+                                    except:
+                                        pass
+                                    else:
+                                        md.width = data['inputs']['width']
+                                if 'inputs' in data and 'height' in data['inputs']:
+                                    try:
+                                        int(data['inputs']['height'])
+                                    except:
+                                        pass
+                                    else:
+                                        md.height = data['inputs']['height']
+                                if 'inputs' in data and 'resolution' in data['inputs']:
+                                    if isinstance(data['inputs']['resolution'], str):
+                                        if 'x' in data['inputs']['resolution'].lower():
+                                            md.width = data['inputs']['resolution'].lower().strip().split('x', 1)[0]
+                                            md.height = data['inputs']['resolution'].lower().strip().split('x', 1)[1]
+                                            if ' ' in md.height:
+                                                md.height = md.height.split(' ', 1)[0]
+                            except:
+                                errors += 1
+                        # second pass to look for prompt is other nodes if necessary
+                        if md.prompt == '':
+                            for node in workflow:
+                                data = workflow[node]
+                                try:
+                                    if 'inputs' in data and 'text' in data['inputs']:
+                                        if isinstance(data['inputs']['text'], str):
+                                            md.prompt = utils.sanitize_prompt(data['inputs']['text'].strip())
+                                except:
+                                    errors += 1
+
+                    else:
+                        if software == '':
+                            self.log('Unsupported JSON metadata format encountered: ' + val.orig_filename + '!', False)
+                        else:
+                            self.log('Unsupported JSON metadata format encountered (' + software + '): ' + val.orig_filename + '!', False)
+                            
+                    if errors > 0:
+                        self.log('Error reading JSON metadata from ' + val.orig_filename + '!', False)
+
+                else:
+                    # not JSON
+                    command = command.strip('"')
+                    if '--neg_prompt' in command:
+                        # this was created by Dream Factory
+                        dream_factory = True
+                        df_params = utils.extract_params_from_command(command)
+                        md.prompt = utils.sanitize_prompt(df_params.get('prompt')).strip().strip('"')
+                        md.neg_prompt = utils.sanitize_prompt(df_params.get('neg_prompt')).strip().strip('"')
+                        md.steps = df_params.get('steps')
+                        md.scale = df_params.get('scale')
+                        md.strength = df_params.get('strength')
+                        md.width = df_params.get('width')
+                        md.height = df_params.get('height')
+                        md.sampler = df_params.get('sampler')
+                        md.seed = df_params.get('seed')
+                        md.clip_skip = df_params.get('clip_skip')
+                        md.model = utils.extract_model_filename(df_params.get('model'))
+                        md.hash = utils.extract_model_hash(df_params.get('model'))
+
+                    elif 'Negative prompt:' in command:
+                        # we'll assume anything before this is the prompt
+                        temp = command.split('Negative prompt:', 1)[0]
+                        temp = temp.strip()
+                        temp = temp.replace('\\', '')
+                        md.prompt = utils.sanitize_prompt(temp)
+
+                        # get negative
+                        temp = command.split('Negative prompt:', 1)[1].strip()
+                        if temp.startswith('Steps:'):
+                            temp = ''
+                        elif '\nSteps:' in temp:
+                            temp = temp.split('\nSteps:', 1)[0]
+                        elif '\n' in temp:
+                            temp = temp.split('\n', 1)[0]
+
+                        md.neg_prompt = utils.sanitize_prompt(temp).strip().strip('"')
+                        p = command.split('Negative prompt:', 1)[1].strip()
+                    else:
+                        if '\n' in command:
+                            temp = command.rsplit('\n', 1)[0].strip()
+                            md.prompt = utils.sanitize_prompt(temp)
+                            p = command.rsplit('\n', 1)[1]
+                        else:
+                            p = command
+
+                    # get the rest of the params:
+                    if not dream_factory:
+                        if 'Steps:' in p and ',' in p:
+                            v = p.split('Steps:', 1)[1].strip()
+                            v = v.split(',', 1)[0].strip()
+                            md.steps = v
+
+                        # TODO case-insensitive match/replace here
+                        if 'CFG scale:' in p and ',' in p:
+                            v = p.split('CFG scale:', 1)[1].strip()
+                            v = v.split(',', 1)[0].strip()
+                            md.scale = v
+                        elif 'CFG Scale:' in p and ',' in p:
+                            v = p.split('CFG Scale:', 1)[1].strip()
+                            v = v.split(',', 1)[0].strip()
+                            md.scale = v
+
+                        if 'Denoising strength:' in p and ',' in p:
+                            v = p.split('Denoising strength:', 1)[1].strip()
+                            v = v.split(',', 1)[0].strip()
+                            md.strength = v
+
+                        if 'Size:' in p and ',' in p:
+                            v = p.split('Size:', 1)[1].strip()
+                            v = v.split(',', 1)[0].strip()
+                            if 'x' in v:
+                                width = v.split('x', 1)[0].strip()
+                                height = v.split('x', 1)[1].strip()
+                                md.width = width
+                                md.height = height
+
+                        if 'Clip skip:' in p and ',' in p:
+                            v = p.split('Clip skip:', 1)[1].strip()
+                            v = v.split(',', 1)[0].strip()
+                            md.clip_skip = v
+
+                        if 'Sampler:' in p and ',' in p:
+                            v = p.split('Sampler:', 1)[1].strip()
+                            v = v.split(',', 1)[0].strip()
+                            if v.endswith(' Exponential'):
+                                v = v.replace(' Exponential', '')
+                            if v.endswith(' Karras'):
+                                v = v.replace(' Karras', '')
+                            md.sampler = v
+
+                        if 'Seed:' in p and ',' in p:
+                            v = p.split('Seed:', 1)[1].strip()
+                            v = v.split(',', 1)[0].strip()
+                            md.seed = v
+
+                        if 'Model:' in p and ',' in p:
+                            v = p.split('Model:', 1)[1].strip()
+                            v = v.split(',', 1)[0].strip()
+                            md.model = utils.extract_model_filename(v)
+
+                        if 'Model hash:' in p and ',' in p:
+                            v = p.split('Model hash:', 1)[1].strip()
+                            v = v.split(',', 1)[0].strip()
+                            md.hash = v
+
+                    # get resources used:
+                    if 'Civitai resources:' in p:
+                        # option 1
+                        # get loras
+                        resources = p.split('Civitai resources:', 1)[1].strip()
+                        while '{"type":"lora",' in resources and '}' in resources:
+                            work = resources.split('{"type":"lora",', 1)[1].split('}', 1)[0]
+                            if '"modelVersionId":' in work and ',' in work:
+                                id = work.split('"modelVersionId":', 1)[1].split(',', 1)[0]
                                 weight = 1.0
                                 if '"weight":' in work and ',' in work:
                                     w = work.split('"weight":', 1)[1].split(',', 1)[0]
@@ -790,57 +879,118 @@ class Images:
                                 rsc.version_id = id
                                 rsc.weight = weight
                                 md.resources.append(rsc)
-                        before = resources.split('Type = lora }"', 1)[0]
-                        after = resources.split('Type = lora }"', 1)[1].split('}', 1)[1]
-                        resources = (before + after).strip()
+                            before = resources.split('{"type":"lora",', 1)[0]
+                            after = resources.split('{"type":"lora",', 1)[1].split('}', 1)[1]
+                            resources = (before + after).strip()
 
-                elif 'Hashes: {' in p:
-                    # option 2
-                    resources = p.split('Hashes: {', 1)[1].strip()
-                    resources = resources.split('}', 1)[0].strip()
-                    while ':' in resources:
-                        while resources.startswith(' ') or resources.startswith('\"'):
-                            resources = resources[1:]
+                        # get checkpoints
+                        resources = p.split('Civitai resources:', 1)[1].strip()
+                        while '{"type":"checkpoint",' in resources and '}' in resources:
+                            work = resources.split('{"type":"checkpoint",', 1)[1].split('}', 1)[0]
+                            id = ''
+                            if '"modelVersionId":' in work and ',' in work:
+                                id = work.split('"modelVersionId":', 1)[1].split(',', 1)[0]
+                            elif '"modelVersionId":' in work:
+                                id = work.split('"modelVersionId":', 1)[1].strip()
+                            if id != '':
+                                rsc = ImageResources()
+                                rsc.type = 'checkpoint'
+                                rsc.version_id = id
+                                md.resources.append(rsc)
+                            before = resources.split('{"type":"checkpoint",', 1)[0]
+                            after = resources.split('{"type":"checkpoint",', 1)[1].split('}', 1)[1]
+                            resources = (before + after).strip()
 
-                        type = resources.split('\"', 1)[0].strip('\"').lower()
-                        if ':' in type:
-                            type = type.split(':', 1)[0].strip()
-                        resources = resources.split('\"', 1)[1]
+                        # get embeddings
+                        resources = p.split('Civitai resources:', 1)[1].strip()
+                        while '{"type":"embed",' in resources and '}' in resources:
+                            work = resources.split('{"type":"embed",', 1)[1].split('}', 1)[0]
+                            if '"modelVersionId":' in work and ',' in work:
+                                id = work.split('"modelVersionId":', 1)[1].split(',', 1)[0]
+                                rsc = ImageResources()
+                                rsc.type = 'embed'
+                                rsc.version_id = id
+                                md.resources.append(rsc)
+                            before = resources.split('{"type":"embed",', 1)[0]
+                            after = resources.split('{"type":"embed",', 1)[1].split('}', 1)[1]
+                            resources = (before + after).strip()
 
-                        while resources.startswith(' ') or resources.startswith(':')  or resources.startswith('\"'):
-                            resources = resources[1:]
+                        # extra pass to get loras in different format
+                        resources = p.split('Civitai resources:', 1)[1].strip()
+                        while 'Type = lora }"' in resources and '}' in resources:
+                            work = resources.split('Type = lora }"', 1)[1].split('}', 1)[0]
+                            if '"modelVersionId":' in work:
+                                id = work.split('"modelVersionId":', 1)[1]
+                                found = True
+                                try:
+                                    num_id = int(id)
+                                except:
+                                    self.log('Unable to determine lora ID from metadata in ' + md.orig_filename, self.log_to_console)
+                                    found = False
+                                if found:
+                                    weight = 1.0
+                                    if '"weight":' in work and ',' in work:
+                                        w = work.split('"weight":', 1)[1].split(',', 1)[0]
+                                        try:
+                                            weight = float(w)
+                                        except:
+                                            weight = 1.0
+                                    rsc = ImageResources()
+                                    rsc.type = 'lora'
+                                    rsc.version_id = id
+                                    rsc.weight = weight
+                                    md.resources.append(rsc)
+                            before = resources.split('Type = lora }"', 1)[0]
+                            after = resources.split('Type = lora }"', 1)[1].split('}', 1)[1]
+                            resources = (before + after).strip()
 
-                        # handles case where we have something like this in metadata:  Hashes: {"model": ""}
-                        if resources.strip() != '':
-                            hash = resources.split('\"', 1)[0].strip()
-                            resources = resources.split('\"', 1)[1]
-
-                            while resources.startswith(' ') or resources.startswith(','):
+                    elif 'Hashes: {' in p:
+                        # option 2
+                        resources = p.split('Hashes: {', 1)[1].strip()
+                        resources = resources.split('}', 1)[0].strip()
+                        while ':' in resources:
+                            while resources.startswith(' ') or resources.startswith('\"'):
                                 resources = resources[1:]
 
+                            type = resources.split('\"', 1)[0].strip('\"').lower()
+                            if ':' in type:
+                                type = type.split(':', 1)[0].strip()
+                            resources = resources.split('\"', 1)[1]
+
+                            while resources.startswith(' ') or resources.startswith(':')  or resources.startswith('\"'):
+                                resources = resources[1:]
+
+                            # handles case where we have something like this in metadata:  Hashes: {"model": ""}
+                            if resources.strip() != '':
+                                hash = resources.split('\"', 1)[0].strip()
+                                resources = resources.split('\"', 1)[1]
+
+                                while resources.startswith(' ') or resources.startswith(','):
+                                    resources = resources[1:]
+
+                                rsc = ImageResources()
+                                rsc.type = type
+                                rsc.hash = hash
+                                md.resources.append(rsc)
+
+                    elif 'Lora hashes: "' in p:
+                        # option 3
+                        resources = p.split('Lora hashes: \"', 1)[1].strip()
+                        resources = resources.split('\"', 1)[0].strip()
+
+                        while ':' in resources:
+                            resources = resources.split(':', 1)[1]
+                            hash = ''
+                            if ',' in resources:
+                                hash = resources.split(',', 1)[0].strip()
+                                resources = resources.split(',', 1)[1]
+                            else:
+                                hash = resources.strip()
+
                             rsc = ImageResources()
-                            rsc.type = type
+                            rsc.type = 'lora'
                             rsc.hash = hash
                             md.resources.append(rsc)
-
-                elif 'Lora hashes: "' in p:
-                    # option 3
-                    resources = p.split('Lora hashes: \"', 1)[1].strip()
-                    resources = resources.split('\"', 1)[0].strip()
-
-                    while ':' in resources:
-                        resources = resources.split(':', 1)[1]
-                        hash = ''
-                        if ',' in resources:
-                            hash = resources.split(',', 1)[0].strip()
-                            resources = resources.split(',', 1)[1]
-                        else:
-                            hash = resources.strip()
-
-                        rsc = ImageResources()
-                        rsc.type = 'lora'
-                        rsc.hash = hash
-                        md.resources.append(rsc)
 
             # save orig raw versions of prompt/neg prompt
             md.prompt_raw = md.prompt
@@ -869,6 +1019,7 @@ class ImageMetaData:
     self.hash = ''
     self.base_model = ''
     self.sampler = ''
+    self.scheduler = ''
     self.clip_skip = ''
     self.resources = []
 

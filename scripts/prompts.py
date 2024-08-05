@@ -4,19 +4,21 @@
 import sys
 import os
 import glob
+from tqdm.auto import tqdm
 from os.path import exists
 from pathlib import Path
 from datetime import datetime as dt
 import scripts.utils as utils
-from scripts.images import ImageMetaData, ImageResources
+from scripts.images import Images, ImageMetaData, ImageResources
 
 # Handles outputting found image metadata as DF .prompts files
 class Prompts:
     # config is a dict of options prepared by the Config class
-    def __init__(self, image_metadata, config):
+    def __init__(self, images, image_metadata, config):
         self.logfile = os.path.join('logs', 'log.txt')
         os.makedirs('logs', exist_ok = True)
 
+        self.images = images
         self.metadata = image_metadata
         self.prepend_filename = config.get('append_filename')
 
@@ -103,15 +105,33 @@ class Prompts:
         self.filter_unwanted_base_prompts()
         self.fix_lora_refs()
         self.add_missing_lora_refs()
+        self.fix_embedding_refs()
         self.enforce_limits()
         self.check_samplers()
         self.remove_filter_words()
         self.remove_neg_filter_words()
-        self.remove_empty(5)
         self.remove_dupes()
+        self.remove_empty(5)
+        self.check_for_main_model()
         self.order_by_model()
         self.remove_filter_loras()
 
+
+    # if no main model is populated, check resources
+    # if only one model is found, assume it's the main
+    def check_for_main_model(self):
+        for k, v in self.metadata.items():
+            if v.model == '':
+                # main model is empty; check resources
+                model_count = 0
+                last_model = ''
+                for r in v.resources:
+                    if r.type.lower().strip() == 'model':
+                        model_count += 1
+                        last_model = r.filename
+                if model_count == 1:
+                    # exactly one model in the resource list; assume it's the main
+                    v.model = last_model
 
     # re-orders the metadata so that models are grouped together
     def order_by_model(self):
@@ -525,7 +545,7 @@ class Prompts:
         self.log('Checking prompts for duplicates:')
         dupe_keys = []
         original_length = len(self.metadata)
-        for kc, vc in self.metadata.copy().items():
+        for kc, vc in tqdm(self.metadata.copy().items()):
             for k, v in self.metadata.items():
                 if k != kc:
                     if v.prompt.lower() == vc.prompt.lower() and v.neg_prompt.lower() == vc.neg_prompt.lower():
@@ -537,6 +557,82 @@ class Prompts:
         final_length = len(self.metadata)
         num_dupes = original_length - final_length
         self.log('Removed ' + str(num_dupes) + ' duplicate prompt(s)...')
+
+
+    # handles embedded AIR resources
+    # https://github.com/civitai/civitai/wiki/AIR-%E2%80%90-Uniform-Resource-Names-for-AI
+    # will replace the AIR link with the embedding name
+    def fix_embedding_refs(self):
+        self.log('Checking prompts for embedded URN references:')
+        count = 0
+        for k, v in tqdm(self.metadata.items()):
+            temp = v.prompt
+            v.prompt = self.replace_embedded_urns(v.prompt)
+            if temp != v.prompt:
+                count += 1
+                #print(v.orig_filename)
+                #print('\n\nOLD: ' + temp)
+                #print('\nNEW: ' + v.prompt)
+
+            temp = v.neg_prompt
+            v.neg_prompt = self.replace_embedded_urns(v.neg_prompt)
+            if temp != v.neg_prompt:
+                count += 1
+                #print('\n\nOLD: ' + temp)
+                #print('\nNEW: ' + v.neg_prompt)
+        self.log('Made ' + str(count) + ' URN link replacements...')
+
+
+    # handles embedded URN AIR resources
+    # https://github.com/civitai/civitai/wiki/AIR-%E2%80%90-Uniform-Resource-Names-for-AI
+    # will replace the URN link with the embedding name and add the embedding to resource list
+    def replace_embedded_urns(self, text):
+        replacements = 0
+        while 'urn:air:' in text and '@' in text:
+            temp = text
+            replacements += 1
+            before = temp.split('urn:air:', 1)[0]
+            temp = temp.split('urn:air:', 1)[1]
+            if '@' in temp:
+                air = 'urn:air:' + temp.split('@', 1)[0]
+                after = temp.split('@', 1)[1]
+                if ' ' in air:
+                    # this AIR is malformed (spaces in AIR); ignore it
+                    # put it back into the neg_prompt with uppercase URN
+                    air = air.replace('urn:air:', 'URN:air:')
+                    text = before + air + '@' + after
+                else:
+                    # proceed
+                    id = ''
+                    while len(after) > 0:
+                        try:
+                            # is this an int?
+                            int(after[0])
+                        except:
+                            # found a non-int character, we have the full id
+                            break
+                        else:
+                            # this is an int; save it as part of the id
+                            # and remove it from the string
+                            id += after[0]
+                            after = after[1:]
+                    if len(id) > 0:
+                        # we seem to have a valid id; replace the AIR with
+                        # the embedding name
+                        filename = self.images.lookup_civitai_filename(id)
+                        filename = filename.rsplit('.', 1)[0]
+                        text = before + filename + after
+                    else:
+                        # this AIR is malformed (zero-length ID); ignore it
+                        # put it back into the neg_prompt with uppercase URN
+                        air = air.replace('urn:air:', 'URN:air:')
+                        text = before + air + '@' + after
+            else:
+                # this AIR is malformed (@ before AIR); ignore it
+                # put it back into the neg_prompt with uppercase URN
+                air = air.replace('urn:air:', 'URN:air:')
+                text = before + air + after
+        return text
 
 
     # adds lora references that appears in resources metadata
@@ -560,6 +656,7 @@ class Prompts:
         self.log('Examining prompts for lora path references:')
         replacements = 0
         for k, v in self.metadata.items():
+            self.log('Working on ' + v.orig_filename + '...', False)
             temp = v.prompt
             while '<lora:' in temp and '>' in temp:
                 # this is inside a lora declaration

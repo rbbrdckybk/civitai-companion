@@ -92,7 +92,7 @@ if __name__ == '__main__':
     #images.debug_list_sampler_breakdown()
 
     print('')
-    prompts = Prompts(images.metadata, config.prompt_config)
+    prompts = Prompts(images, images.metadata, config.prompt_config)
     prompts.manifest()
     prompts.write_prompt_file()
 
