@@ -6,16 +6,17 @@
 
 # Features
 
- * Batch extracts prompts and all associated metadata (dimensions, model, sampler, steps, scale, etc) from images downloaded from civitai.com. Also reads metadata from images created with [Dream Factory](https://github.com/rbbrdckybk/dream-factory).
+ * Batch extracts prompts and all associated metadata (dimensions, model, sampler, steps, scale, etc) from images downloaded from civitai.com. Also reads metadata from images directly created with [Dream Factory](https://github.com/rbbrdckybk/dream-factory). Handles most popular formats found on Civitai (Automatic1111 webui, ComfyUI, Fooocus, etc).
  * Automatically batch downloads necessary resources (models, LoRAs, embeddings) required to generate downloaded images. You may select the type(s) of resources that you want downloaded, a maximum file size for downloads, and blacklist resources that you never want downloaded.
  * Outputs all extracted prompt information and associated metadata into user-specified format driven by simple template system (includes sample template for [Dream Factory](https://github.com/rbbrdckybk/dream-factory)).
  * LoRA references embedded in prompts that have user-specified paths are automatically modified to match your path structure (e.g.: ```<lora:some\user\specified\path\lora_name:1.0>``` becomes ```<lora:lora_name:1.0>```).
  * LoRAs that are referenced in the 'resources' section of Civitai's prompt metadata but aren't embedded in the actual prompt are automatically added.
+ * Embedded [Civitai URNs](https://github.com/civitai/civitai/wiki/AIR-%E2%80%90-Uniform-Resource-Names-for-AI) in positive & negative prompts are automatically converted (and any missing resources they refer to are automatically downloaded).
  * Optional specification of min/max values for certain prompt metadata values (e.g.: you may set max steps to 60, values over this will be set to 60).
  * Optional filtering for automatic removal of unwanted words from positive/negative prompts.
  * Optional filtering for automatic removal of unwanted LoRAs from prompts.
  * Optional image dimension re-sizing to the closest "official" resolution for the base model that each image is generated from (while preserving aspect ratio).
- * Sampler names that are unsupported in Automatic1111's webui are automatically translated into an appropriate supported sampler (e.g.: 'dpmpp_3m_sde' becomes 'DPM++ 3M SDE').
+ * Optional automatic translation of sampler names to Automatic1111 webui equivalents (e.g.: 'dpmpp_3m_sde' becomes 'DPM++ 3M SDE').
 
 # Requirements
 
