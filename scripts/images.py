@@ -703,9 +703,11 @@ class Images:
                                     if isinstance(data['inputs']['scheduler'], str):
                                         md.scheduler = data['inputs']['scheduler']
                                     if 'steps' in data['inputs']:
-                                        md.steps = data['inputs']['steps']
+                                        if isinstance(data['inputs']['steps'], int):
+                                            md.steps = data['inputs']['steps']
                                 if 'inputs' in data and 'guidance' in data['inputs']:
-                                    md.scale = data['inputs']['guidance']
+                                    if isinstance(data['inputs']['guidance'], float):
+                                        md.scale = data['inputs']['guidance']
                                 if 'inputs' in data and 'unet_name' in data['inputs']:
                                     if isinstance(data['inputs']['unet_name'], str):
                                         md.model = utils.extract_model_filename(data['inputs']['unet_name'])
@@ -737,9 +739,13 @@ class Images:
                             for node in workflow:
                                 data = workflow[node]
                                 try:
+                                    old_prompt = md.prompt
                                     if 'inputs' in data and 'text' in data['inputs']:
                                         if isinstance(data['inputs']['text'], str):
-                                            md.prompt = utils.sanitize_prompt(data['inputs']['text'].strip())
+                                            new_prompt = utils.sanitize_prompt(data['inputs']['text'].strip())
+                                            # if there are multiple prompts in the workflow, take the longest
+                                            if len(new_prompt) > len(old_prompt):
+                                                md.prompt = new_prompt
                                 except:
                                     errors += 1
 
@@ -748,7 +754,7 @@ class Images:
                             self.log('Unsupported JSON metadata format encountered: ' + val.orig_filename + '!', False)
                         else:
                             self.log('Unsupported JSON metadata format encountered (' + software + '): ' + val.orig_filename + '!', False)
-                            
+
                     if errors > 0:
                         self.log('Error reading JSON metadata from ' + val.orig_filename + '!', False)
 
