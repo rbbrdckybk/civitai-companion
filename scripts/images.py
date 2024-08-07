@@ -533,6 +533,7 @@ class Images:
                     md.orig_filepath = dir
                     self.metadata.update({img:md})
 
+
     # examines an image's EXIF data, returns the UserComment field if present
     def read_exif(self, image_path):
         if not exists(image_path):
@@ -540,8 +541,15 @@ class Images:
             return ''
         image = Image.open(image_path)
         exif_data = image._getexif()
-
         if exif_data is not None:
+            # check for Dream Factory metadata first
+            try:
+                data = exif_data[0x9c9c].decode('utf16')
+            except KeyError as e:
+                pass
+            else:
+                return data
+            # check for others
             for tag_id in exif_data:
                 tag = TAGS.get(tag_id, tag_id)
                 data = exif_data.get(tag_id)
