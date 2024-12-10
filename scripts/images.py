@@ -742,18 +742,25 @@ class Images:
                                                 md.height = md.height.split(' ', 1)[0]
                             except:
                                 errors += 1
-                        # second pass to look for prompt is other nodes if necessary
+                        # second pass to look for prompt in other nodes if necessary
                         if md.prompt == '':
                             for node in workflow:
                                 data = workflow[node]
                                 try:
                                     old_prompt = md.prompt
-                                    if 'inputs' in data and 'text' in data['inputs']:
-                                        if isinstance(data['inputs']['text'], str):
-                                            new_prompt = utils.sanitize_prompt(data['inputs']['text'].strip())
-                                            # if there are multiple prompts in the workflow, take the longest
-                                            if len(new_prompt) > len(old_prompt):
-                                                md.prompt = new_prompt
+                                    if 'inputs' in data:
+                                        if 'text' in data['inputs']:
+                                            if isinstance(data['inputs']['text'], str):
+                                                new_prompt = utils.sanitize_prompt(data['inputs']['text'].strip())
+                                                # if there are multiple prompts in the workflow, take the longest
+                                                if len(new_prompt) > len(old_prompt):
+                                                    md.prompt = new_prompt
+                                        elif 'wildcard_text' in data['inputs']:
+                                            if isinstance(data['inputs']['wildcard_text'], str):
+                                                new_prompt = utils.sanitize_prompt(data['inputs']['wildcard_text'].strip())
+                                                # if there are multiple prompts in the workflow, take the longest
+                                                if len(new_prompt) > len(old_prompt):
+                                                    md.prompt = new_prompt
                                 except:
                                     errors += 1
 
