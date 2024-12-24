@@ -670,6 +670,10 @@ class Prompts:
                     replacements += 1
                 before = temp.split('<lora:', 1)[0]
                 after = temp.split('<lora:', 1)[1].split('>', 1)[1]
+                # added 2024-12-23 BK: prompts from civitai often have an
+                # extraneous space in lora declarations before the extension
+                while '. safetensors' in work:
+                    work = work.replace('. safetensors', '.safetensors')
                 temp = before + '<zzzora:' + work + '>' + after
             v.prompt = temp.replace('<zzzora:', '<lora:')
         self.log('Fixed ' + str(replacements) + ' lora reference(s) containing broken paths...')
