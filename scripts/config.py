@@ -98,6 +98,8 @@ class Config:
             self.prompt_config.update({'output_save_as' : self.options.prompt_output_save_as})
         if ('word_filter_list' not in self.prompt_config) or (self.options.prompt_word_filter_list != ''):
             self.prompt_config.update({'word_filter_list' : self.options.prompt_word_filter_list})
+        if ('char_filter_list' not in self.prompt_config) or (self.options.prompt_char_filter_list != ''):
+            self.prompt_config.update({'char_filter_list' : self.options.prompt_char_filter_list})
         if ('neg_word_filter_list' not in self.prompt_config) or (self.options.prompt_neg_word_filter_list != ''):
             self.prompt_config.update({'neg_word_filter_list' : self.options.prompt_neg_word_filter_list})
         if ('lora_filter_list' not in self.prompt_config) or (self.options.prompt_lora_filter_list != ''):
@@ -227,6 +229,12 @@ class Config:
             type=str,
             default='',
             help='comma-separated list of words to remove from prompts if found'
+        )
+        self.parser.add_argument(
+            '--prompt_char_filter_list',
+            type=str,
+            default='',
+            help='comma-separated list of characters to remove from prompts if found'
         )
         self.parser.add_argument(
             '--prompt_neg_word_filter_list',
@@ -399,6 +407,10 @@ class Config:
                     elif command == 'prompt_word_filter_list':
                         if value != '':
                             self.prompt_config.update({'word_filter_list' : value})
+
+                    elif command == 'prompt_char_filter_list':
+                        if value != '':
+                            self.prompt_config.update({'char_filter_list' : value})
 
                     elif command == 'prompt_neg_word_filter_list':
                         if value != '':

@@ -48,6 +48,16 @@ class Prompts:
                 temp.append(w)
             self.word_filter_list = temp
 
+        # set up list of characters to exclude from prompts if found
+        self.char_filter_list = []
+        if config.get('char_filter_list') != '':
+            self.char_filter_list = config.get('char_filter_list').split(',')
+            temp = []
+            for w in self.char_filter_list.copy():
+                w = w.strip()
+                temp.append(w)
+            self.char_filter_list = temp
+
         # set up list of words to exclude from negative prompts if found
         self.neg_word_filter_list = []
         if config.get('neg_word_filter_list') != '':
@@ -109,6 +119,7 @@ class Prompts:
         self.enforce_limits()
         self.check_samplers()
         self.remove_filter_words()
+        self.remove_filter_chars()
         self.remove_neg_filter_words()
         self.remove_dupes()
         self.remove_empty(5)
@@ -202,6 +213,23 @@ class Prompts:
                         if before != len(v.neg_prompt):
                             count += 1
             self.log('Removed ' + str(count) + ' occurances of filter word(s) in prompts...')
+
+
+    # removes filter chars if they appear in prompts
+    def remove_filter_chars(self):
+        if len(self.char_filter_list) > 0:
+            self.log('Checking prompts for filter characters:')
+            count = 0
+            for k, v in self.metadata.items():
+                for fw in self.char_filter_list:
+                    if fw in v.prompt.lower():
+                        # remove the filter character
+                        v.prompt = v.prompt.replace(fw, '')
+                        # re-sanitize
+                        v.prompt = utils.sanitize_prompt(v.prompt)
+                        count += 1
+
+            self.log('Removed ' + str(count) + ' occurances of filter characters(s) in prompts...')
 
 
     # removes filter words if they appear in negative prompts
