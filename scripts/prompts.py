@@ -121,11 +121,11 @@ class Prompts:
         self.remove_filter_words()
         self.remove_filter_chars()
         self.remove_neg_filter_words()
-        self.remove_dupes()
         self.remove_empty(5)
         self.check_for_main_model()
         self.order_by_model()
         self.remove_filter_loras()
+        self.remove_dupes()
 
 
     # if no main model is populated, check resources
